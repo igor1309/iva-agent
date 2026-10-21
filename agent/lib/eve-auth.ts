@@ -30,27 +30,35 @@ export const TURN_KINDS: ReadonlySet<string> = new Set([
   "helper",
 ]);
 
-export function isHelperTurn(
-  ctx?: {
-    session?: {
-      auth?: {
-        initiator?: {
-          authenticator: string;
-          attributes?: Readonly<Record<string, unknown>> | null;
-        } | null;
-        current?: {
-          authenticator: string;
-          attributes?: Readonly<Record<string, unknown>> | null;
-        } | null;
+type TurnContext = {
+  session?: {
+    auth?: {
+      initiator?: {
+        authenticator: string;
+        attributes?: Readonly<Record<string, unknown>> | null;
+      } | null;
+      current?: {
+        authenticator: string;
+        attributes?: Readonly<Record<string, unknown>> | null;
       } | null;
     } | null;
-  } | null,
-): boolean {
+  } | null;
+} | null;
+
+function isServiceTurn(ctx: TurnContext | undefined, kind: string): boolean {
   return [ctx?.session?.auth?.initiator, ctx?.session?.auth?.current].some(
     (auth) =>
       auth?.authenticator === "iva-bearer" &&
-      auth.attributes?.iva_turn === "helper",
+      auth.attributes?.iva_turn === kind,
   );
+}
+
+export function isHelperTurn(ctx?: TurnContext): boolean {
+  return isServiceTurn(ctx, "helper");
+}
+
+export function isReminderTurn(ctx?: TurnContext): boolean {
+  return isServiceTurn(ctx, "reminder");
 }
 
 /** Service attributes are accepted only after bearer authentication. */

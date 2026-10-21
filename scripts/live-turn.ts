@@ -26,7 +26,7 @@ import { carryCodexLogin } from "./lib/live-codex-auth.ts";
 import { resolveDataDir } from "./lib/data-dir.ts";
 
 const PROVIDER_ENV =
-  /^(MODEL_PROVIDER|HELPER_MODEL|THINKING_EFFORT|(OLLAMA|OPENCODE|OPENROUTER|CODEX|CLAUDE|CUSTOM)_[A-Z_]+)$/u;
+  /^(MODEL_PROVIDER|HELPER_MODEL|REMINDER_MODEL|THINKING_EFFORT|(OLLAMA|OPENCODE|OPENROUTER|CODEX|CLAUDE|CUSTOM)_[A-Z_]+)$/u;
 const MARK = randomBytes(3).toString("hex");
 const FACT = `кот Барсик-${MARK} любит рыбу`;
 const TURN_TIMEOUT_MS = 240_000;

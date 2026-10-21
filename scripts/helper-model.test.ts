@@ -179,3 +179,54 @@ test("helper defaults and unknown windows", () => {
     "text-fixture",
   );
 });
+test("reminder turns take REMINDER_MODEL, other turns keep their model", () => {
+  const turn = (kind: string) =>
+    stepModelChoice({
+      session: {
+        id: kind,
+        auth: {
+          initiator: {
+            authenticator: "iva-bearer",
+            attributes: { iva_turn: kind },
+          },
+        },
+      },
+    }).model;
+  const previous = {
+    helper: process.env.HELPER_MODEL,
+    reminder: process.env.REMINDER_MODEL,
+  };
+  try {
+    process.env.HELPER_MODEL = "deepseek-v4-pro";
+    delete process.env.REMINDER_MODEL;
+    assert.equal(turn("reminder"), "text-fixture");
+    process.env.REMINDER_MODEL = " ";
+    assert.equal(turn("reminder"), "text-fixture");
+    process.env.REMINDER_MODEL = "light-fixture";
+    assert.equal(turn("reminder"), "light-fixture");
+    for (const kind of ["watch", "brief", "insight", "signal", "alert"])
+      assert.equal(turn(kind), "text-fixture", kind);
+    assert.equal(turn("helper"), "deepseek-v4-pro");
+    assert.equal(
+      stepModelChoice({
+        session: {
+          id: "forged",
+          auth: {
+            initiator: {
+              authenticator: "telegram-webhook",
+              attributes: { iva_turn: "reminder" },
+            },
+          },
+        },
+      }).model,
+      "text-fixture",
+    );
+  } finally {
+    for (const [name, value] of [
+      ["HELPER_MODEL", previous.helper],
+      ["REMINDER_MODEL", previous.reminder],
+    ] as const)
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+  }
+});

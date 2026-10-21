@@ -1,6 +1,6 @@
 import { resolveContextWindow } from "./lib/context-window.ts";
 import { claudeContextWindow } from "./lib/claude-cli.ts";
-import { isHelperTurn } from "./lib/eve-auth.ts";
+import { isHelperTurn, isReminderTurn } from "./lib/eve-auth.ts";
 import { MODEL_PROVIDERS } from "./lib/model-provider.ts";
 import { defineAgent, defineDynamic } from "eve";
 // Провайдер и его модели — единый источник в provider.ts (тот же конфиг у agent/vision.ts
@@ -21,13 +21,18 @@ export function stepModelChoice(
   ctx: Parameters<typeof isHelperTurn>[0] & { session: { id: string } },
 ) {
   const helper = isHelperTurn(ctx);
+  // Напоминание (в том числе дайджест по расписанию) может идти на своей модели того же
+  // провайдера; пустой REMINDER_MODEL — модель чата, как было.
+  const reminder = !helper && isReminderTurn(ctx);
   const model = helper
     ? process.env.HELPER_MODEL === undefined
       ? MODEL_PROVIDERS[providerName].defaultHelperModel || cfg.textModel
       : process.env.HELPER_MODEL.trim() || cfg.textModel
-    : cfg.textModel;
+    : reminder
+      ? process.env.REMINDER_MODEL?.trim() || cfg.textModel
+      : cfg.textModel;
   const contextWindow =
-    helper && providerName === "claude"
+    (helper || reminder) && providerName === "claude"
       ? resolveContextWindow(
           "CLAUDE_CONTEXT_WINDOW",
           process.env.CLAUDE_CONTEXT_WINDOW,
